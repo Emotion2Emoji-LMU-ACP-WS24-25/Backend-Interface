@@ -6,13 +6,12 @@ const mongoose = require("mongoose");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const MONGODB =
+  process.env.MONGO_URI || "mongodb://localhost:27017/imageUploadDB";
 
 // MongoDB connection
 mongoose
-  .connect("mongodb://localhost:27017/imageUploadDB", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(MONGODB)
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("MongoDB connection error:", err));
 
@@ -23,8 +22,8 @@ const getUserImageModel = (username) => {
   }
 
   const userImageSchema = new mongoose.Schema({
-    frontImagePath: { type: String, required: false },
-    backImagePath: { type: String, required: false },
+    frontImagePath: { type: String, required: true },
+    backImagePath: { type: String, required: true },
     uploadDate: { type: String, required: true }, // Date as string (YYYY-MM-DD)
     uploadTime: { type: String, required: true }, // Time as string (HH:MM:SS)
   });
@@ -100,7 +99,7 @@ app.use(express.json());
 
 // Route to handle image uploads
 app.post(
-  "/image_upload",
+  "/daily_upload",
   upload.fields([
     { name: "front", maxCount: 1 },
     { name: "back", maxCount: 1 },
