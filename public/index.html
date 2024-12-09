@@ -1,0 +1,27 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Front and Back Images</title>
+</head>
+<body>
+  <h1>Upload Front and Back Images</h1>
+
+  <form id="image-upload-form" enctype="multipart/form-data">
+    <label for="user">Username:</label>
+    <input type="text" id="user" name="user" required>
+
+    <label for="front">Front Image:</label>
+    <input type="file" id="front" name="front" accept="image/*" required>
+
+    <label for="back">Back Image:</label>
+    <input type="file" id="back" name="back" accept="image/*" required>
+
+    <button type="submit">Upload Images</button>
+  </form>
+
+  <script src="script.js"></script> <!-- Deine JavaScript-Datei -->
+</body>
+</html>
