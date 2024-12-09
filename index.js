@@ -9,6 +9,9 @@ const PORT = process.env.PORT || 3000;
 const MONGODB =
   process.env.MONGO_URI || "mongodb://localhost:27017/imageUploadDB";
 
+// Statische Dateien aus dem 'public' Ordner bereitstellen
+app.use(express.static(path.join(__dirname, 'public')));
+
 // MongoDB connection
 mongoose
   .connect(MONGODB)
