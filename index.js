@@ -3,8 +3,10 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const mongoose = require("mongoose");
+const cors = require("cors");
 
 const app = express();
+app.use(cors());
 const PORT = process.env.PORT || 3000;
 const MONGODB =
   process.env.MONGO_URI || "mongodb://localhost:27017/imageUploadDB";
@@ -24,6 +26,9 @@ const getUserImageModel = (username) => {
   const userImageSchema = new mongoose.Schema({
     frontImagePath: { type: String, required: true },
     backImagePath: { type: String, required: true },
+    prompt: { type: String, required: false, default: null},
+    status: { type: String, required: true},
+    resultImagePath: { type: String, required: false, default: null },
     uploadDate: { type: String, required: true }, // Date as string (YYYY-MM-DD)
     uploadTime: { type: String, required: true }, // Time as string (HH:MM:SS)
   });
@@ -125,11 +130,12 @@ app.post(
       // Create a new image entry for the user
       const newImageEntry = new UserImage({
         frontImagePath: req.files["front"]
-          ? `/uploads/${username}/${req.files["front"][0].filename}`
+          ? `uploads/${username}/${req.files["front"][0].filename}`
           : null,
         backImagePath: req.files["back"]
-          ? `/uploads/${username}/${req.files["back"][0].filename}`
+          ? `uploads/${username}/${req.files["back"][0].filename}`
           : null,
+        status: "uploaded",
         uploadDate: date,
         uploadTime: time,
       });
@@ -137,18 +143,14 @@ app.post(
       // Save the entry to the user's collection
       await newImageEntry.save();
 
+      console.log(newImageEntry)
+
       // Reset request-specific properties after handling the request
       req.uploadRequestId = null;
       req.formattedDate = null;
 
       res.status(200).json({
-        message: "Images uploaded and entry created successfully!",
-        files: {
-          front: newImageEntry.frontImagePath,
-          back: newImageEntry.backImagePath,
-        },
-        date: newImageEntry.uploadDate,
-        time: newImageEntry.uploadTime,
+        id: newImageEntry._id
       });
     } catch (err) {
       res.status(500).json({
@@ -158,6 +160,56 @@ app.post(
     }
   }
 );
+
+// Route to download an image by ID
+app.get("/download", async (req, res) => {
+  const { id, user } = req.query;
+
+  if (!id || !user) {
+    return res.status(400).json({ error: "ID and user are required parameters" });
+  }
+
+  try {
+    // Get the model for the user
+    const UserImage = getUserImageModel(user);
+
+    // Find the entry by ID
+    const entry = await UserImage.findById(id);
+
+    if (!entry) {
+      return res.status(404).json({ error: "Entry not found" });
+    }
+
+    // Check if the result image path exists
+    if (!entry.resultImagePath) {
+      return res.status(404).json({ error: "Image not available yet" });
+    }
+
+    // Create the full file path
+    const filePath = path.join(entry.resultImagePath);
+    console.log(filePath)
+
+    // Check if the file exists on the server
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "File not found on server" });
+    }
+
+    // Send the file to the client
+    res.download(filePath, (err) => {
+      if (err) {
+        console.error("Error sending file:", err);
+        res.status(500).json({ error: "Failed to download the file" });
+      }
+    });
+  } catch (err) {
+    res.status(422).json({
+      error: "Failed to retrieve or download the image",
+      details: err.message,
+    });
+  }
+});
+
+
 
 // Error handler for multer
 app.use((err, req, res, next) => {
