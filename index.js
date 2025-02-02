@@ -27,11 +27,15 @@ const getUserImageModel = (username) => {
   }
 
   const userImageSchema = new mongoose.Schema({
-    frontImagePath: { type: String, required: true },
-    backImagePath: { type: String, required: true },
-    prompt: { type: String, required: false, default: null},
     status: { type: String, required: true},
+    frontImagePath: { type: String, required: true },
+    frontImageDescription: { type: String, required: false, default: null },
+    backImagePath: { type: String, required: true },
+    backImageDescription: { type: String, required: false, default: null  },
+    prompt: { type: String, required: false, default: null},
     resultImagePath: { type: String, required: false, default: null },
+    caption: { type: String, required: false, default: null  },
+    emotion: { type: String, required: false, default: null  },
     uploadDate: { type: String, required: true }, // Date as string (YYYY-MM-DD)
     uploadTime: { type: String, required: true }, // Time as string (HH:MM:SS)
   });
