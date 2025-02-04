@@ -168,6 +168,40 @@ app.post(
   }
 );
 
+// Route to get the caption of an image by ID
+app.get("/caption", async (req, res) => {
+  const { id, user } = req.query;
+
+  if (!id || !user) {
+    return res.status(400).json({ error: "ID and user are required parameters" });
+  }
+
+  try {
+    // Get the model for the user
+    const UserImage = getUserImageModel(user);
+
+    // Find the entry by ID
+    const entry = await UserImage.findById(id);
+
+    if (!entry) {
+      return res.status(404).json({ error: "Entry not found" });
+    }
+
+    // Check if the caption exists
+    if (!entry.caption) {
+      return res.status(404).json({ error: "Caption not available yet" });
+    }
+
+    // Return the caption
+    res.status(200).json({ caption: entry.caption });
+  } catch (err) {
+    res.status(500).json({
+      error: "Failed to retrieve caption from database",
+      details: err.message,
+    });
+  }
+});
+
 // Route to download an image by ID
 app.get("/download", async (req, res) => {
   const { id, user } = req.query;
